@@ -43,7 +43,7 @@ local function toggleShiftLock()
        PlayerMouse.Icon = originalMouseIcon
        local Mouse = game:GetService("UserInputService"):GetMouseLocation()
        local X,Y = Mouse.X, Mouse.Y + 60
-       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,true,game,1);
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,false,game,1);
    end
 end
 
