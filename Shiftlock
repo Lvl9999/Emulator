@@ -38,9 +38,27 @@ local function toggleShiftLock()
        local Mouse = game:GetService("UserInputService"):GetMouseLocation();
        local X,Y = Mouse.X, Mouse.Y + 10
        game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,true,game,1);
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,true,game,1);
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,true,game,1);
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,true,game,1);
    else
        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
        PlayerMouse.Icon = originalMouseIcon
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,false,game,1);
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,false,game,1);
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,false,game,1);
        local Mouse = game:GetService("UserInputService"):GetMouseLocation();
        local X,Y = Mouse.X, Mouse.Y + 10
        game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,false,game,1);
