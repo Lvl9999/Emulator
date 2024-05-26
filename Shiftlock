@@ -61,8 +61,19 @@ local function TLQOYN_fake_script()
     end
  
     CAS:BindAction("ShiftLOCK", ShiftLock, false, Enum.KeyCode.LeftShift);
- 
+
+    player.CharacterAdded:Connect(function(char)
+        character = char
+        root = char:WaitForChild("HumanoidRootPart");
+        humanoid = char.Humanoid
+    end)
+
+    player.CharacterRemoving:Connect(function()
+        humanoid.AutoRotate = true
+        active = false
+    end)
+
     return {}
 end
  
-coroutine.wrap(TLQOYN_fake_script)()
+coroutine.wrap(TLQOYN_fake_script)();
