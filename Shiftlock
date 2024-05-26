@@ -5,75 +5,105 @@ if not AutoExec:IsLoaded() then
     AutoExec.Loaded:Wait();
 end
 
-local function TLQOYN_fake_script()
-    local players = game:GetService("Players");
-    local runservice = game:GetService("RunService");
-    local CAS = game:GetService("ContextActionService");
-    local userinputservice = game:GetService("UserInputService");
-    local player = players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait();
-    local root = character:WaitForChild("HumanoidRootPart");
-    local humanoid = character.Humanoid
-    local camera = workspace.CurrentCamera
- 
-    local MAX_LENGTH = 900000
-    local active = false
-    local ENABLED_OFFSET = CFrame.new(1.7, 0, 0)
-    local DISABLED_OFFSET = CFrame.new(-1.7, 0, 0)
- 
-    local function GetUpdatedCameraCFrame(ROOT, CAMERA)
-        return CFrame.new(root.Position, Vector3.new(CAMERA.CFrame.LookVector.X * MAX_LENGTH, root.Position.Y, CAMERA.CFrame.LookVector.Z * MAX_LENGTH));
-    end
- 
-    local function EnableShiftlock()
-        humanoid.AutoRotate = false
-        root.CFrame = GetUpdatedCameraCFrame(root, camera);
-        camera.CFrame = camera.CFrame * ENABLED_OFFSET
-        userinputservice.MouseBehavior = Enum.MouseBehavior.LockCenter
-    end
- 
-    local function DisableShiftlock()
-        humanoid.AutoRotate = true
-        camera.CFrame = camera.CFrame * DISABLED_OFFSET
-        pcall(function()
-            active:Disconnect();
-            active = nil
-        end)
-        userinputservice.MouseBehavior = Enum.MouseBehavior.Default
-    end
- 
-    local function ShiftLock(actionName, inputState, inputObject)
-        if inputState == Enum.UserInputState.Begin and inputObject.KeyCode == Enum.KeyCode.LeftShift then
-            if not active then
-                local Mouse = game:GetService("UserInputService"):GetMouseLocation();
-                local X,Y = Mouse.X, Mouse.Y + 10
-                game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,true,game,1);
-                active = runservice.RenderStepped:Connect(function()
-                    EnableShiftlock();
-                end)
-            else
-                DisableShiftlock();
-                local Mouse = game:GetService("UserInputService"):GetMouseLocation();
-                local X,Y = Mouse.X, Mouse.Y + 10
-                game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,false,game,1);
-            end
-        end
-    end
- 
-    CAS:BindAction("ShiftLOCK", ShiftLock, false, Enum.KeyCode.LeftShift);
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Camera = game.Workspace.CurrentCamera
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerMouse = LocalPlayer:GetMouse()
+local shiftLockEnabled = false
+local lockOffset = Vector2.new(5, 0)
+local cursorImage = "rbxasset://textures/MouseLockedCursor.png"
+local originalMouseIcon
+local originalCameraOffset
+local characterAddedConn, characterRemovingConn
 
-    player.CharacterAdded:Connect(function(char)
-        character = char
-        root = char:WaitForChild("HumanoidRootPart");
-        humanoid = char.Humanoid
-    end)
-
-    player.CharacterRemoving:Connect(function()
-        humanoid.AutoRotate = true
-        active = false
-    end)
-
-    return {}
+local function disconnectAllConnections()
+   if characterAddedConn then
+       characterAddedConn:Disconnect()
+       characterAddedConn = nil
+   end
+   if characterRemovingConn then
+       characterRemovingConn:Disconnect()
+       characterRemovingConn = nil
+   end
 end
- 
-coroutine.wrap(TLQOYN_fake_script)();
+
+local function toggleShiftLock()
+   shiftLockEnabled = not shiftLockEnabled
+   if shiftLockEnabled then
+       UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+       originalMouseIcon = PlayerMouse.Icon
+       PlayerMouse.Icon = cursorImage
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,true,game,1);
+   else
+       UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+       PlayerMouse.Icon = originalMouseIcon
+       local Mouse = game:GetService("UserInputService"):GetMouseLocation();
+       local X,Y = Mouse.X, Mouse.Y + 10
+       game:GetService("VirtualInputManager"):SendMouseButtonEvent(X,Y,1,false,game,1);
+   end
+end
+
+local function updateCameraOffset()
+   if shiftLockEnabled then
+       local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+       if humanoid then
+           humanoid.CameraOffset = Vector3.new(1.7, 0, 0) --- Edit X, Y, Z to how far you want the shiftlock to be from your screen.
+       end
+   else
+       local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+       if humanoid then
+           humanoid.CameraOffset = Vector3.new(0, 0, 0)
+       end
+   end
+end
+
+local function onCharacterRemoving()
+   disconnectAllConnections()
+end
+
+local function onCharacterAdded()
+   disconnectAllConnections()
+   characterRemovingConn = LocalPlayer.CharacterRemoving:Connect(onCharacterRemoving)
+end
+
+local function onInputBegan(input, isProcessed)
+   if not isProcessed and input.KeyCode == Enum.KeyCode.LeftShift then --- Edit "LeftShift" to any other Keybind for the shiftlock.
+       toggleShiftLock()
+   end
+end
+
+local function onRenderStepped()
+   updateCameraOffset()
+   if shiftLockEnabled then
+       local player = LocalPlayer
+       if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+           player.Character.HumanoidRootPart.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(0, math.atan2(-Camera.CFrame.lookVector.X, -Camera.CFrame.lookVector.Z), 0)
+       end
+
+       local centerScreen = Vector2.new(PlayerMouse.X, PlayerMouse.Y)
+       local newMousePosition = centerScreen + lockOffset
+       local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+       if humanoid and humanoid:IsDescendantOf(game.Workspace) then
+           humanoid.CameraOffset = Vector3.new(1.7, 0, 0)
+       end
+   end
+end
+
+local function onInputChanged(input)
+   if shiftLockEnabled then
+       if input.UserInputType == Enum.UserInputType.MouseMovement then
+           local centerScreen = Vector2.new(PlayerMouse.X, PlayerMouse.Y)
+           local newMousePosition = centerScreen + lockOffset
+       end
+   end
+end
+
+characterAddedConn = LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+UserInputService.InputBegan:Connect(onInputBegan)
+RunService.Heartbeat:Connect(updateCameraOffset)
+RunService.RenderStepped:Connect(onRenderStepped)
+UserInputService.InputChanged:Connect(onInputChanged)
